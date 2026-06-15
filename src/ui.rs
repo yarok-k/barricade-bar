@@ -51,13 +51,22 @@ impl Ui {
         let clock_clone = clock_rc.clone();
         let layout_clone = layout_rc.clone();
         let controls_clone = controls_rc.clone();
-        gtk::glib::timeout_add_local(std::time::Duration::from_millis(800), move || {
-            clock_clone.borrow_mut().update();
-            gtk::glib::ControlFlow::Continue
-        });
-        gtk::glib::timeout_add_local(std::time::Duration::from_millis(200), move || {
-            layout_clone.borrow_mut().update();
-            controls_clone.borrow_mut().update();
+        let mut update_flag: i8 = 1;
+        gtk::glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+            match update_flag {
+                2 => {
+                    layout_clone.borrow_mut().update();
+                    controls_clone.borrow_mut().update();
+                    update_flag = update_flag + 1;
+                }
+                8 => {
+                    clock_clone.borrow_mut().update();
+                    update_flag = update_flag + 1;
+                }
+                _ => {
+                    update_flag = update_flag + 1;
+                }
+            }
             gtk::glib::ControlFlow::Continue
         });
         Ok(Self {})
