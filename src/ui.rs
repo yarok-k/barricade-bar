@@ -63,6 +63,9 @@ impl Ui {
                     clock_clone.borrow_mut().update();
                     update_flag = update_flag + 1;
                 }
+                11 => {
+                    update_flag = 1;
+                }
                 _ => {
                     update_flag = update_flag + 1;
                 }
