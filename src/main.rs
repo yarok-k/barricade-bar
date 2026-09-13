@@ -8,7 +8,7 @@ mod widgets;
 
 fn main() -> Result<(), anyhow::Error> {
     let app = Application::builder()
-        .application_id("org.example.Barricade.desktop")
+        .application_id("ru.bst.Barricade.bar")
         .build();
     app.connect_activate(move |app| {
         // Получаем дисплей по умолчанию
