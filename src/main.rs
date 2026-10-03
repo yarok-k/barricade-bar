@@ -27,6 +27,7 @@ fn main() -> Result<(), anyhow::Error> {
         });
     });
 
+
     let exit_code = app.run();
     if exit_code.value() != 0 {}
     Ok(())

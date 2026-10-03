@@ -4,3 +4,4 @@ pub mod bluetooth;
 pub mod layout;
 pub mod network;
 pub mod tray;
+pub mod core;
