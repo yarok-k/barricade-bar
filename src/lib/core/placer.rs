@@ -9,9 +9,11 @@ use serde::Deserialize;
 use crate::lib::core::element::BuiltWidget;
 use crate::lib::core::widget::WidgetTrait;
 
+use crate::widgets::network::Network;
 use crate::widgets::{
     clock::Clock,
-    audio::Audio
+    audio::Audio,
+    layout::Layout,
 };
 
 // Позиции элементов
@@ -29,6 +31,8 @@ pub enum ElementPos {
 pub enum ElementType {
     Clock,
     Audio,
+    Layout,
+    Network,
 }
 
 // Структуры описания YAML-файла
@@ -73,30 +77,24 @@ impl Placer {
             if let Some(widgets) = placer.widgets.get(pos) {
                 for widget in widgets {
                     container.add(&widget.gtk_widget());
-                    if let BuiltWidget::Clock(clock_obj) = widget {
-                        clock_obj.update();
-                    }
                 }
             }
         }
-
+        placer.update_widgets();
         Ok(placer)
     }
     pub fn update_widgets(&mut self) -> Result<()> {
-        for (_, widgets) in self.widgets.iter_mut() {
-            for widget in widgets {
-                match widget {
-                    BuiltWidget::Clock(widg) => {
-                        widg.update();
-                        return Ok(());
-                    },
-                    BuiltWidget::Audio(widg) => {
-                        widg.update();
-                        return Ok(());
-                    }
-                    _ => {
-                        return Ok(());
-                    }
+        for widgets in self.widgets.values_mut() {
+            for widget in widgets.iter_mut() {
+                let res = match widget {
+                    BuiltWidget::Clock(w)  => w.update(),
+                    BuiltWidget::Audio(w)  => w.update(),
+                    BuiltWidget::Layout(w) => w.update(),
+                    BuiltWidget::Network(w) => w.update(),
+                    _ => Ok(()),
+                };
+                if let Err(e) = res {
+                    eprintln!("widget update failed: {e:#}");
                 }
             }
         }
@@ -129,6 +127,14 @@ impl Placer {
             ElementType::Audio => {
                 let widget_  = Audio::new();
                 BuiltWidget::Audio(widget_.expect("REASON"))
+            }
+            ElementType::Layout => {
+                let widget_  = Layout::new();
+                BuiltWidget::Layout(widget_.expect("REASON"))
+            }
+            ElementType::Network => {
+                let widget_  = Network::new();
+                BuiltWidget::Network(widget_.expect("REASON"))
             }
         }
     }

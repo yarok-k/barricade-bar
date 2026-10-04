@@ -16,7 +16,7 @@ impl WidgetTrait for Clock {
         let text = gtk::Label::new(Some("00:00:00"));
         trigger.set_child(Some(&text));
 
-        let clock = Self {
+        let mut clock = Self {
             trigger,
             text,
             time: RefCell::new(String::new()),
@@ -25,7 +25,7 @@ impl WidgetTrait for Clock {
         Ok(clock)
     }
 
-    fn update(&self) -> Result<()> {
+    fn update(&mut self) -> Result<()> {
         let now = chrono::Local::now()
             .format("%H:%M:%S | %d-%m-%Y")
             .to_string();

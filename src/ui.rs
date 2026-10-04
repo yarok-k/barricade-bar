@@ -38,7 +38,7 @@ impl Ui {
         // управление таймерами
 
         let placer_rc = Rc::new(RefCell::new(placer));
-        gtk::glib::timeout_add_local(std::time::Duration::from_millis(100), move || {
+        gtk::glib::timeout_add_local(std::time::Duration::from_millis(500), move || {
             placer_rc.borrow_mut().update_widgets();
             gtk::glib::ControlFlow::Continue
         });

@@ -12,7 +12,7 @@ pub struct Audio {
     pub trigger: gtk::Button,
     pub indicator: gtk::Image,
     pub text: gtk::Label,
-    audio_lib: RefCell<AudioLib>,
+    audio_lib: AudioLib,
 }
 
 impl WidgetTrait for Audio {
@@ -63,15 +63,15 @@ impl WidgetTrait for Audio {
             trigger,
             indicator,
             text,
-            audio_lib: RefCell::new(AudioLib::new()),
+            audio_lib: AudioLib::new(),
         })
     }
-    fn update(&self) -> Result<()> {
+    fn update(&mut self) -> Result<()> {
 
-        self.audio_lib.borrow_mut().update();
-        self.text.set_label(&format!("{}%", self.audio_lib.borrow().volume));
+        self.audio_lib.update();
+        self.text.set_label(&format!("{}%", self.audio_lib.volume));
         self.indicator.set_from_icon_name(
-            Some(&self.audio_lib.borrow().get_icon_name().to_string()),
+            Some(&self.audio_lib.get_icon_name().to_string()),
             gtk::IconSize::Button,
         );
         Ok(())

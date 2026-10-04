@@ -1,6 +1,8 @@
-use crate::lib::layout::LayoutLib;
+use anyhow::Result;
 use gtk::prelude::*;
 use std::cell::RefCell;
+use crate::lib::layout::LayoutLib;
+use crate::lib::core::widget::WidgetTrait;
 
 #[derive(Debug, Clone)]
 pub struct Layout {
@@ -10,13 +12,13 @@ pub struct Layout {
     pub layout: RefCell<String>,
     pub layouts: RefCell<Vec<String>>,
 }
-impl Layout {
-    pub fn new() -> Result<Self, anyhow::Error> {
+impl WidgetTrait for Layout {
+    fn new() -> Result<Self> {
         let trigger = gtk::Button::new();
         let text = gtk::Label::new(Some("??"));
         trigger.set_child(Some(&text));
         let layoutlib = LayoutLib::new()?;
-        let layout = Self {
+        let mut layout = Self {
             layoutlib: layoutlib,
             trigger,
             text,
@@ -26,7 +28,7 @@ impl Layout {
         layout.update()?;
         Ok(layout)
     }
-    pub fn update(&self) -> Result<(), anyhow::Error> {
+    fn update(&mut self) -> Result<()> {
         self.layoutlib.get_layout()?;
         self.layoutlib.get_layouts()?;
         *self.layout.borrow_mut() = self.layoutlib.layout_short.borrow().clone();

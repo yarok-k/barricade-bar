@@ -1,15 +1,17 @@
-use crate::lib::network::NetworkLib;
+use anyhow::Result;
 use gtk::prelude::*;
+use crate::lib::core::widget::WidgetTrait;
+use crate::lib::network::NetworkLib;
 
 #[derive(Clone)]
-pub struct NetworkWidget {
+pub struct Network {
     pub trigger: gtk::Button,
     pub indicator: gtk::Image,
     net_lib: NetworkLib,
 }
 
-impl NetworkWidget {
-    pub fn new() -> Self {
+impl WidgetTrait for Network {
+    fn new() -> Result<Self> {
         let internal_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
         let indicator = gtk::Image::builder()
@@ -23,13 +25,13 @@ impl NetworkWidget {
         let trigger = gtk::Button::new();
         trigger.add(&internal_container);
 
-        Self {
+        Ok(Self {
             trigger,
             indicator,
             net_lib: NetworkLib::new(),
-        }
+        })
     }
-    pub fn update(&mut self) -> Result<(), anyhow::Error> {
+    fn update(&mut self) -> Result<()> {
         self.net_lib.update()?;
         self.indicator
             .set_from_icon_name(Some(self.net_lib.get_icon_name()), gtk::IconSize::Button);
