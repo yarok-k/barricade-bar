@@ -1,5 +1,7 @@
+use anyhow::Result;
 use gtk::prelude::*;
 use std::cell::RefCell;
+use crate::lib::core::widget::WidgetTrait;
 
 #[derive(Clone)]
 pub struct Clock {
@@ -7,25 +9,29 @@ pub struct Clock {
     pub text: gtk::Label,
     pub time: RefCell<String>,
 }
-impl Clock {
-    pub fn new() -> Self {
+
+impl WidgetTrait for Clock {
+    fn new() -> Result<Self> {
         let trigger = gtk::Button::new();
         let text = gtk::Label::new(Some("00:00:00"));
         trigger.set_child(Some(&text));
+
         let clock = Self {
             trigger,
             text,
-            time: RefCell::new("".to_string()),
+            time: RefCell::new(String::new()),
         };
-        clock.update();
-        clock
+        clock.update()?;
+        Ok(clock)
     }
-    pub fn update(&self) {
+
+    fn update(&self) -> Result<()> {
         let now = chrono::Local::now()
             .format("%H:%M:%S | %d-%m-%Y")
             .to_string();
 
         self.text.set_label(&now);
         *self.time.borrow_mut() = now;
+        Ok(())
     }
 }

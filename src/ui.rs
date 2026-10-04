@@ -1,6 +1,3 @@
-use crate::widgets::clock::Clock;
-use crate::widgets::controls::controls::Controls;
-use crate::widgets::layout::Layout;
 use gtk::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;

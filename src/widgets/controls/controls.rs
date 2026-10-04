@@ -1,4 +1,4 @@
-use crate::widgets::controls::audio::AudioWidget;
+use crate::widgets::controls::audio::Audio;
 use crate::widgets::controls::battery::BatteryWidget;
 use crate::widgets::controls::network::NetworkWidget;
 use crate::widgets::controls::power::PowerWidget;
@@ -8,7 +8,7 @@ use gtk::prelude::*;
 
 #[derive(Clone)]
 pub enum ControlsIndicators {
-    Audio(AudioWidget),
+    Audio(Audio),
     Network(NetworkWidget),
     Battery(BatteryWidget),
     Power(PowerWidget),

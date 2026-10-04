@@ -2,18 +2,21 @@ use crate::lib::audio::AudioLib;
 use gtk::glib;
 use gtk::glib::clone;
 use gtk::prelude::*;
+use anyhow::Result;
+use std::cell::RefCell;
+use crate::lib::core::widget::WidgetTrait;
+
 
 #[derive(Clone)]
-pub struct AudioWidget {
+pub struct Audio {
     pub trigger: gtk::Button,
     pub indicator: gtk::Image,
-    //pub revealer: gtk::Revealer,
     pub text: gtk::Label,
-    audio_lib: AudioLib,
+    audio_lib: RefCell<AudioLib>,
 }
 
-impl AudioWidget {
-    pub fn new() -> Self {
+impl WidgetTrait for Audio {
+    fn new() -> Result<Self> {
         let internal_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
         let indicator = gtk::Image::builder()
@@ -23,7 +26,7 @@ impl AudioWidget {
         let revealer = gtk::Revealer::new();
         revealer.set_transition_type(gtk::RevealerTransitionType::SlideRight);
         revealer.set_transition_duration(300);
-        revealer.set_reveal_child(false); // Изначально скрыто
+        revealer.set_reveal_child(false);
 
         let text = gtk::Label::builder().label("100%").build();
 
@@ -56,20 +59,21 @@ impl AudioWidget {
                 eprintln!("Не удалось запустить pavucontrol: {}", e);
             }
         });
-        Self {
+        Ok(Self {
             trigger,
             indicator,
-            //revealer,
             text,
-            audio_lib: AudioLib::new(),
-        }
+            audio_lib: RefCell::new(AudioLib::new()),
+        })
     }
-    pub fn update(&mut self) {
-        self.audio_lib.update();
-        self.text.set_label(&format!("{}%", self.audio_lib.volume));
+    fn update(&self) -> Result<()> {
+
+        self.audio_lib.borrow_mut().update();
+        self.text.set_label(&format!("{}%", self.audio_lib.borrow().volume));
         self.indicator.set_from_icon_name(
-            Some(&self.audio_lib.get_icon_name().to_string()),
+            Some(&self.audio_lib.borrow().get_icon_name().to_string()),
             gtk::IconSize::Button,
         );
+        Ok(())
     }
 }
