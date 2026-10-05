@@ -9,6 +9,7 @@ use serde::Deserialize;
 use crate::lib::core::element::BuiltWidget;
 use crate::lib::core::widget::WidgetTrait;
 
+use crate::widgets::battery::Battery;
 use crate::widgets::network::Network;
 use crate::widgets::{
     clock::Clock,
@@ -33,6 +34,7 @@ pub enum ElementType {
     Audio,
     Layout,
     Network,
+    Battery,
 }
 
 // Структуры описания YAML-файла
@@ -91,6 +93,7 @@ impl Placer {
                     BuiltWidget::Audio(w)  => w.update(),
                     BuiltWidget::Layout(w) => w.update(),
                     BuiltWidget::Network(w) => w.update(),
+                    BuiltWidget::Battery(w) => w.update(),
                     _ => Ok(()),
                 };
                 if let Err(e) = res {
@@ -120,22 +123,11 @@ impl Placer {
 
     pub fn widget_assembler(element_type: &ElementType) -> BuiltWidget {
         match element_type {
-            ElementType::Clock => {
-                let widget_ = Clock::new();
-                BuiltWidget::Clock(widget_.expect("REASON"))
-            }
-            ElementType::Audio => {
-                let widget_  = Audio::new();
-                BuiltWidget::Audio(widget_.expect("REASON"))
-            }
-            ElementType::Layout => {
-                let widget_  = Layout::new();
-                BuiltWidget::Layout(widget_.expect("REASON"))
-            }
-            ElementType::Network => {
-                let widget_  = Network::new();
-                BuiltWidget::Network(widget_.expect("REASON"))
-            }
+            ElementType::Clock => BuiltWidget::Clock(Clock::new().expect("REASON")),
+            ElementType::Audio => BuiltWidget::Audio(Audio::new().expect("REASON")),
+            ElementType::Layout => BuiltWidget::Layout(Layout::new().expect("REASON")),
+            ElementType::Network => BuiltWidget::Network(Network::new().expect("REASON")),
+            ElementType::Battery => BuiltWidget::Battery(Battery::new().expect("REASON")),
         }
     }
 }

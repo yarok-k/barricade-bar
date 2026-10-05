@@ -2,7 +2,9 @@ use gtk::prelude::*;
 use crate::widgets::{
     audio::Audio,
     clock::Clock,
-    layout::Layout, network::Network,
+    layout::Layout,
+    network::Network,
+    battery::Battery,
 };
 
 // Enum готовых GTK-объектов
@@ -11,8 +13,8 @@ pub enum BuiltWidget {
     Clock(Clock),
     Audio(Audio),
     Layout(Layout),
-    Network(Network)
-    // Battery(Battery),
+    Network(Network),
+    Battery(Battery),
 }
 
 impl BuiltWidget {
@@ -23,6 +25,7 @@ impl BuiltWidget {
             BuiltWidget::Audio(w) => w.trigger.clone().upcast(),
             BuiltWidget::Layout(w) => w.trigger.clone().upcast(),
             BuiltWidget::Network(w) => w.trigger.clone().upcast(),
+            BuiltWidget::Battery(w) => w.trigger.clone().upcast(),
             _ => gtk::Button::builder().label("err").build().upcast(),
         }
     }

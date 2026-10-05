@@ -1,18 +1,21 @@
-use crate::lib::battery::BatteryLib;
+use anyhow::Result;
 use gtk::glib;
 use gtk::glib::clone;
 use gtk::prelude::*;
+
+use crate::lib::battery::BatteryLib;
+use crate::lib::core::widget::WidgetTrait;
+
 #[derive(Clone)]
-pub struct BatteryWidget {
+pub struct Battery {
     pub trigger: gtk::Button,
-    pub indicator: gtk::Image,
-    // pub revealer: gtk::Revealer,
-    pub text: gtk::Label,
+    indicator: gtk::Image,
+    text: gtk::Label,
     battery_lib: BatteryLib,
 }
 
-impl BatteryWidget {
-    pub fn new() -> Self {
+impl WidgetTrait for Battery {
+    fn new() -> Result<Self> {
         let battery_lib = BatteryLib::new();
         let internal_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
@@ -51,15 +54,15 @@ impl BatteryWidget {
                 glib::Propagation::Proceed
             }),
         );
-        Self {
+        Ok(Self {
             trigger,
             indicator,
             // revealer,
             text,
             battery_lib,
-        }
+        })
     }
-    pub fn update(&mut self) -> Result<(), anyhow::Error> {
+    fn update(&mut self) -> Result<()> {
         self.battery_lib.update()?;
         if self.battery_lib.capacity == -1 {
             self.trigger.set_visible(false);
