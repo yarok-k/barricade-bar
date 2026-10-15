@@ -84,21 +84,20 @@ impl BatteryLib {
         if self.capacity == -1 || self.status == NoBattery {
             return "";
         }
-
         match (self.status, self.capacity) {
             (Full, _) => "battery-level-100",
 
             // Заряжается (Charging)
-            (Charging, 0..=5) => "battery-level-0-charging",
-            (Charging, 6..=10) => "battery-level-10-charging",
-            (Charging, 11..=20) => "battery-level-20-charging",
-            (Charging, 21..=30) => "battery-level-30-charging",
-            (Charging, 31..=40) => "battery-level-40-charging",
-            (Charging, 41..=50) => "battery-level-50-charging",
-            (Charging, 51..=60) => "battery-level-60-charging",
-            (Charging, 61..=70) => "battery-level-70-charging",
-            (Charging, 71..=80) => "battery-level-80-charging",
-            (Charging, 81..=100) => "battery-level-100-charging",
+            (Charging, 0..=5) => "battery-level-0-charging-symbolic",
+            (Charging, 6..=10) => "battery-level-10-charging-symbolic",
+            (Charging, 11..=20) => "battery-level-20-charging-symbolic",
+            (Charging, 21..=30) => "battery-level-30-charging-symbolic",
+            (Charging, 31..=40) => "battery-level-40-charging-symbolic",
+            (Charging, 41..=50) => "battery-level-50-charging-symbolic",
+            (Charging, 51..=60) => "battery-level-60-charging-symbolic",
+            (Charging, 61..=70) => "battery-level-70-charging-symbolic",
+            (Charging, 71..=80) => "battery-level-80-charging-symbolic",
+            (Charging, 81..=100) => "battery-level-100-charging-symbolic",
 
             // Разряжается (Discharging) или любые другие статусы
             (_, 0..=5) => "battery-level-0",

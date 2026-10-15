@@ -19,7 +19,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     owner = "yarok-k";
     repo = "barricade-bar";
     rev = "master"; # лучше закрепить конкретный коммит
-    hash = "sha256-vF+Gito5A2sfNawLXY85+9XiYbH0ljwXp7XVyic2x5g="; # nix сам покажет правильный хеш при первой сборке
+    hash = "sha256-vF+Gito5A2sfNawLXY85+9XiYbH0ljwXp7XVyic2x5g=";
   };
 
   cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
