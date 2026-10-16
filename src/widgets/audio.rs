@@ -1,4 +1,4 @@
-use crate::lib::audio::AudioLib;
+use crate::lib::audio::AudioSinkLib as AudioLib;
 use gtk::glib;
 use gtk::glib::clone;
 use gtk::prelude::*;
@@ -12,7 +12,6 @@ pub struct Audio {
     pub trigger: gtk::Button,
     pub indicator: gtk::Image,
     pub text: gtk::Label,
-    audio_lib: AudioLib,
 }
 
 impl WidgetTrait for Audio {
@@ -63,15 +62,13 @@ impl WidgetTrait for Audio {
             trigger,
             indicator,
             text,
-            audio_lib: AudioLib::new(),
         })
     }
     fn update(&mut self) -> Result<()> {
 
-        self.audio_lib.update();
-        self.text.set_label(&format!("{}%", self.audio_lib.volume));
+        self.text.set_label(&format!("{}%", AudioLib::get_volume()));
         self.indicator.set_from_icon_name(
-            Some(&self.audio_lib.get_icon_name().to_string()),
+            Some(AudioLib::get_sink_icon_name()),
             gtk::IconSize::Button,
         );
         Ok(())
