@@ -1,5 +1,5 @@
 use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow};
+use gtk::{CssProvider, StyleContext,Application, ApplicationWindow, glib, gdk};
 use ui::Ui;
 
 mod lib;
@@ -10,6 +10,7 @@ fn main() -> Result<(), anyhow::Error> {
     let app = Application::builder()
         .application_id("ru.bst.Barricade.bar")
         .build();
+    app.connect_startup(|_| load_css());
     app.connect_activate(move |app| {
         // Получаем дисплей по умолчанию
         let display = gtk::gdk::Display::default().expect("Could not get default display");
@@ -33,7 +34,7 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn create_window_for_monitor(app: &Application, monitor: &gtk::gdk::Monitor) {
+fn create_window_for_monitor(app: &Application, monitor: &gdk::Monitor) {
     let win = ApplicationWindow::builder()
         .application(app)
         .decorated(false)
@@ -49,4 +50,16 @@ fn create_window_for_monitor(app: &Application, monitor: &gtk::gdk::Monitor) {
     let _ui = Ui::new(&win, app);
 
     win.show_all();
+}
+fn load_css() {
+    let provider = CssProvider::new();
+    provider
+        .load_from_data(include_bytes!("style.css"))
+        .expect("Не удалось загрузить src/style.css");
+
+    StyleContext::add_provider_for_screen(
+        &gdk::Screen::default().expect("Нет gdk::Screen"),
+        &provider,
+        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
 }
