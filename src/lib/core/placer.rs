@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use anyhow::{Result,Ok};
+use anyhow::{Result, Ok};
 
 use gtk::prelude::*;
 use serde::Deserialize;
@@ -26,8 +26,9 @@ pub enum ElementPos {
     Right,
 }
 
-// Типы элементов для парсинга YAML
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+// Типы элементов для парсинга YAML.
+// Hash нужен, потому что тип используется как ключ HashMap в ElementEntry.
+#[derive(Debug, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum ElementType {
     Clock,
@@ -37,17 +38,47 @@ pub enum ElementType {
     Battery,
 }
 
+// Элемент списка в YAML. Поддерживаются оба формата:
+//   - "clock"                      (без команды)
+//   - audio: "/path/to/command"    (с командой, которая выполнится по клику)
+//   - layout: None                 (команды нет)
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum ElementEntry {
+    Plain(ElementType),
+    WithCommand(HashMap<ElementType, Option<String>>),
+}
+
+impl ElementEntry {
+    // Приводим оба варианта к списку пар (тип, команда)
+    fn into_pairs(self) -> Vec<(ElementType, Option<String>)> {
+        match self {
+            ElementEntry::Plain(t) => vec![(t, None)],
+            ElementEntry::WithCommand(map) => map
+                .into_iter()
+                .map(|(t, cmd)| (t, Self::normalize(cmd)))
+                .collect(),
+        }
+    }
+
+    // "None", "" и null означают "команды нет"
+    fn normalize(cmd: Option<String>) -> Option<String> {
+        cmd.map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty() && !s.eq_ignore_ascii_case("none"))
+    }
+}
+
 // Структуры описания YAML-файла
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub elements: Elements,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub struct Elements {
     #[serde(flatten)]
-    pub positions: HashMap<ElementPos, Option<Vec<ElementType>>>,
+    pub positions: HashMap<ElementPos, Option<Vec<ElementEntry>>>,
 }
 
 pub struct Placer {
@@ -63,18 +94,19 @@ impl Placer {
         let raw_content = placer.reader()?;
         let content: Config = serde_yaml::from_str(&raw_content)?;
 
-        // 1. Собираем виджеты по типам из YAML
-        for (pos, element_types) in content.elements.positions {
-            if let Some(types) = element_types {
+        // 1. Собираем виджеты из YAML
+        for (pos, entries) in content.elements.positions {
+            if let Some(entries) = entries {
                 let mut built_list = Vec::new();
-                for elem_type in types {
-                    let built_widget = Self::widget_assembler(&elem_type);
-                    built_list.push(built_widget);
+                for entry in entries {
+                    for (elem_type, popup) in entry.into_pairs() {
+                        built_list.push(Self::widget_assembler(&elem_type, popup)?);
+                    }
                 }
                 placer.widgets.insert(pos, built_list);
             }
         }
-        // 2. Вставляем их в переданные GTK-контейнеры
+
         for (pos, container) in containers {
             if let Some(widgets) = placer.widgets.get(pos) {
                 for widget in widgets {
@@ -82,19 +114,20 @@ impl Placer {
                 }
             }
         }
-        placer.update_widgets();
+
+        let _ = placer.update_widgets();
         Ok(placer)
     }
+
     pub fn update_widgets(&mut self) -> Result<()> {
         for widgets in self.widgets.values_mut() {
             for widget in widgets.iter_mut() {
                 let res = match widget {
-                    BuiltWidget::Clock(w)  => w.update(),
-                    BuiltWidget::Audio(w)  => w.update(),
+                    BuiltWidget::Clock(w) => w.update(),
+                    BuiltWidget::Audio(w) => w.update(),
                     BuiltWidget::Layout(w) => w.update(),
                     BuiltWidget::Network(w) => w.update(),
                     BuiltWidget::Battery(w) => w.update(),
-                    _ => Ok(()),
                 };
                 if let Err(e) = res {
                     eprintln!("widget update failed: {e:#}");
@@ -120,14 +153,16 @@ impl Placer {
 
         fs::read_to_string(&file_path)
     }
-
-    pub fn widget_assembler(element_type: &ElementType) -> BuiltWidget {
-        match element_type {
-            ElementType::Clock => BuiltWidget::Clock(Clock::new().expect("REASON")),
-            ElementType::Audio => BuiltWidget::Audio(Audio::new().expect("REASON")),
-            ElementType::Layout => BuiltWidget::Layout(Layout::new().expect("REASON")),
-            ElementType::Network => BuiltWidget::Network(Network::new().expect("REASON")),
-            ElementType::Battery => BuiltWidget::Battery(Battery::new().expect("REASON")),
-        }
+    pub fn widget_assembler(
+        element_type: &ElementType,
+        popup: Option<String>,
+    ) -> Result<BuiltWidget> {
+        Ok(match element_type {
+            ElementType::Clock   => BuiltWidget::Clock(Clock::new(popup)?),
+            ElementType::Audio   => BuiltWidget::Audio(Audio::new(popup)?),
+            ElementType::Layout  => BuiltWidget::Layout(Layout::new(popup)?),
+            ElementType::Network => BuiltWidget::Network(Network::new(popup)?),
+            ElementType::Battery => BuiltWidget::Battery(Battery::new(popup)?),
+        })
     }
 }

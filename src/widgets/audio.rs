@@ -1,4 +1,5 @@
 use crate::lib::audio::AudioSinkLib as AudioLib;
+use gtk::gdk::keys::constants::Option;
 use gtk::glib;
 use gtk::glib::clone;
 use gtk::prelude::*;
@@ -15,7 +16,7 @@ pub struct Audio {
 }
 
 impl WidgetTrait for Audio {
-    fn new() -> Result<Self> {
+    fn new(popup: Option<String>) -> Result<Self> {
         let internal_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
         let indicator = gtk::Image::builder()
@@ -53,11 +54,13 @@ impl WidgetTrait for Audio {
                 glib::Propagation::Proceed
             }),
         );
-        trigger.connect_clicked(|_| {
-            if let Err(e) = std::process::Command::new("pavucontrol").spawn() {
-                eprintln!("Не удалось запустить pavucontrol: {}", e);
-            }
-        });
+        if let Some(cmd) = popup {
+            trigger.connect_clicked(move |_| {
+                if let Err(e) = std::process::Command::new(&cmd).spawn() {
+                    eprintln!("Не удалось запустить {}: {}", cmd, e);
+                }
+            });
+        }
         Ok(Self {
             trigger,
             indicator,

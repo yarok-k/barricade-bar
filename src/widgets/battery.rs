@@ -15,7 +15,7 @@ pub struct Battery {
 }
 
 impl WidgetTrait for Battery {
-    fn new() -> Result<Self> {
+    fn new(popup: Option<String>) -> Result<Self> {
         let battery_lib = BatteryLib::new();
         let internal_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 

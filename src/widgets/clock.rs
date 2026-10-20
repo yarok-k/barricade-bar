@@ -11,7 +11,7 @@ pub struct Clock {
 }
 
 impl WidgetTrait for Clock {
-    fn new() -> Result<Self> {
+    fn new(popup: Option<String>) -> Result<Self> {
         let trigger = gtk::Button::new();
         let text = gtk::Label::new(Some("00:00:00"));
         trigger.set_child(Some(&text));

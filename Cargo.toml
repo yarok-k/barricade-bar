@@ -8,7 +8,8 @@ repository = "https://github.com/yarok-k/barricade-bar"
 
 [dependencies]
 gtk = "0.18"
-networkmanager = "0.5"
+nmrs = "3"
+tokio = { version = "1", features = ["full"] }
 dbus = "0.9"
 niri-ipc = "25"
 anyhow = "1.0"
