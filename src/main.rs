@@ -1,6 +1,9 @@
 use gtk::prelude::*;
 use gtk::{CssProvider, StyleContext,Application, ApplicationWindow, glib, gdk};
 use ui::Ui;
+use lib::core::parcer::{Parser,ParsedConfig};
+
+use crate::lib::core::parcer;
 
 mod lib;
 mod ui;
@@ -52,10 +55,16 @@ fn create_window_for_monitor(app: &Application, monitor: &gdk::Monitor) {
     win.show_all();
 }
 fn load_css() {
+    let parsed = Parser::new().parse().unwrap();
+
+    let Some(css_path) = parsed.stylesheet else {
+        return; // stylesheet в конфиге не задан
+    };
+
     let provider = CssProvider::new();
     provider
-        .load_from_data(include_bytes!("style.css"))
-        .expect("Не удалось загрузить src/style.css");
+        .load_from_path(css_path.to_str().expect("путь к CSS не в UTF-8"))
+        .expect("Не удалось загрузить CSS");
 
     StyleContext::add_provider_for_screen(
         &gdk::Screen::default().expect("Нет gdk::Screen"),
