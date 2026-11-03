@@ -12,6 +12,7 @@ pkgs.mkShell {
     rust-analyzer
     usbutils
     exfatprogs
+    playerctl
   ];
 
   buildInputs = with pkgs; [
