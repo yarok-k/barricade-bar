@@ -35,6 +35,16 @@ Barricade Bar is a lightweight status bar that is drawn on top of the screen (on
 - Runtime tools and services: `wpctl` (WirePlumber), NetworkManager
 - An icon theme with freedesktop symbolic icons (for example, Adwaita)
 
+### Nix Users
+
+This project includes a `shell.nix` for a reproducible development environment:
+
+```bash
+nix-shell
+```
+
+The shell provides the Rust toolchain (`rustc`, `cargo`, `rust-analyzer`), build tools (`pkg-config`, `clang`, `gcc`, `gdb`, `wrapGAppsHook3`) and all libraries: GTK 3, GLib, cairo, pango, gdk-pixbuf, gtk-layer-shell, NetworkManager and libpulseaudio. `package.nix` describes the Nix package of the bar.
+
 ### Build
 
 ```bash
@@ -64,17 +74,18 @@ The config file is located at `~/.config/barricade/bar.bst` and is created on fi
 ```yaml
 elements:
   left:
-    - "layout"
   center:
     - "clock"
   right:
-    - "network"
-    - audio: "barricade-sound"   # command launched on click
-    - "battery"
+    - layout: None
+    - network: None
+    - audio: "/path/to/Barricade-sound"   # command launched on click
+    - battery: None
 stylesheet: "~/.config/barricade/style.css"
 ```
 
 - An element is either a plain name (`"clock"`) or `name: "command"`. The values `""`, `null` and `none` mean "no command".
+- `None` (as in `layout: None`) means that the element has no command.
 - Available elements: `clock`, `audio`, `layout`, `network`, `battery`.
 - The command is currently used by the `audio` widget.
 - Relative stylesheet paths are resolved from `~/.config/barricade/`, `~/` is expanded to your home directory. An empty value means no custom styles. A missing CSS file is created empty.
@@ -82,40 +93,75 @@ stylesheet: "~/.config/barricade/style.css"
 
 ### Styling
 
-The bar background has the CSS class `barricade_background`. All other nodes can be styled by the standard GTK 3 names (`button`, `label`, `image`, `revealer`).
+The bar background has the CSS class `barricade_background`, and every widget button has the class `barricade_statusbar_button`. Other nodes can be styled with the standard GTK 3 names (`window`, `label`, `image`, `revealer`). Example `~/.config/barricade/style.css`:
 
 ```css
+window {
+    background: transparent;
+}
 .barricade_background {
-    background: #1e1e2e;
-    color: #cdd6f4;
+    background-color: skyblue;
+    border-radius: 10px;
+}
+
+.barricade_statusbar_button {
+    color: black;
+    background: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    transition: background-color 150ms ease;
+    padding: 6px 6px;
+    min-height: 0;
+    min-width: 0;
+    margin: 4px 6px;
+}
+
+.barricade_statusbar_button:hover {
+    background-color: #6fbdee;
+}
+
+.barricade_statusbar_button:active {
+    background-color: #5aaedf;
 }
 ```
 
 ## Project Structure
 
 ```
-src/
-├── main.rs              # Entry point, layer-shell windows, CSS hot reload
-├── ui.rs                # Bar layout (left / center / right), periodic widget updates
-├── lib/
-│   ├── mod.rs           # Library modules
-│   ├── audio.rs         # Volume / mute / sinks via wpctl
-│   ├── battery.rs       # Battery state from /sys/class/power_supply
-│   ├── layout.rs        # Keyboard layout via niri IPC
-│   ├── network.rs       # Network devices via NetworkManager (nmrs)
-│   ├── bluetooth.rs     # Reserved, not implemented yet
-│   └── core/
-│       ├── parcer.rs    # Configuration file parser
-│       ├── placer.rs    # Builds widgets and places them into zones
-│       ├── widget.rs    # Common widget trait
-│       └── element.rs   # Built widget wrapper
-└── widgets/
-    ├── mod.rs           # Widget modules
-    ├── clock.rs         # Date and time
-    ├── audio.rs         # Volume indicator
-    ├── layout.rs        # Keyboard layout indicator
-    ├── network.rs       # Network indicator
-    └── battery.rs       # Battery indicator
+.
+├── Cargo.toml
+├── Cargo.lock
+├── LICENSE
+├── NOTICE
+├── package.nix          # Nix package definition
+├── shell.nix            # Nix development shell
+├── README.md
+├── README_EN.md
+├── README_RU.md
+└── src/
+    ├── main.rs              # Entry point, layer-shell windows, CSS hot reload
+    ├── ui.rs                # Bar layout (left / center / right), periodic widget updates
+    ├── lib/
+    │   ├── mod.rs           # Library modules
+    │   ├── audio.rs         # Volume / mute / sinks via wpctl
+    │   ├── battery.rs       # Battery state from /sys/class/power_supply
+    │   ├── layout.rs        # Keyboard layout via niri IPC
+    │   ├── network.rs       # Network devices via NetworkManager (nmrs)
+    │   ├── bluetooth.rs     # Reserved, not implemented yet
+    │   └── core/
+    │       ├── mod.rs       # Core modules
+    │       ├── parcer.rs    # Configuration file parser
+    │       ├── placer.rs    # Builds widgets and places them into zones
+    │       ├── widget.rs    # Common widget trait
+    │       └── element.rs   # Built widget wrapper
+    └── widgets/
+        ├── mod.rs           # Widget modules
+        ├── clock.rs         # Date and time
+        ├── audio.rs         # Volume indicator
+        ├── layout.rs        # Keyboard layout indicator
+        ├── network.rs       # Network indicator
+        └── battery.rs       # Battery indicator
 ```
 
 ## Development

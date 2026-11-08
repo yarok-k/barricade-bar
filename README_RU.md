@@ -35,6 +35,16 @@ Barricade Bar — это лёгкий статусбар, который ото�
 - Утилиты и службы времени выполнения: `wpctl` (WirePlumber), NetworkManager
 - Тема иконок со стандартными символическими иконками freedesktop (например, Adwaita)
 
+### Nix Users
+
+Для воспроизводимого окружения разработки в проекте есть `shell.nix`:
+
+```bash
+nix-shell
+```
+
+Shell предоставляет инструментарий Rust (`rustc`, `cargo`, `rust-analyzer`), инструменты сборки (`pkg-config`, `clang`, `gcc`, `gdb`, `wrapGAppsHook3`) и все библиотеки: GTK 3, GLib, cairo, pango, gdk-pixbuf, gtk-layer-shell, NetworkManager и libpulseaudio. Файл `package.nix` описывает Nix-пакет бара.
+
 ### Сборка
 
 ```bash
@@ -64,17 +74,18 @@ spawn-at-startup "/path/to/barricade_bar"
 ```yaml
 elements:
   left:
-    - "layout"
   center:
     - "clock"
   right:
-    - "network"
-    - audio: "barricade-sound"   # команда, запускаемая по клику
-    - "battery"
+    - layout: None
+    - network: None
+    - audio: "/path/to/Barricade-sound"   # команда, запускаемая по клику
+    - battery: None
 stylesheet: "~/.config/barricade/style.css"
 ```
 
 - Элемент — это либо просто имя (`"clock"`), либо `имя: "команда"`. Значения `""`, `null` и `none` означают «без команды».
+- `None` (как в `layout: None`) означает, что у элемента нет команды.
 - Доступные элементы: `clock`, `audio`, `layout`, `network`, `battery`.
 - Сейчас команду использует виджет `audio`.
 - Относительные пути к стилю считаются от `~/.config/barricade/`, `~/` раскрывается в домашний каталог. Пустое значение означает отсутствие пользовательских стилей. Если CSS-файла нет, он создаётся пустым.
@@ -82,40 +93,75 @@ stylesheet: "~/.config/barricade/style.css"
 
 ### Стилизация
 
-Фон бара имеет CSS-класс `barricade_background`. Остальные узлы стилизуются стандартными именами GTK 3 (`button`, `label`, `image`, `revealer`).
+Фон бара имеет CSS-класс `barricade_background`, а каждая кнопка виджета — класс `barricade_statusbar_button`. Остальные узлы стилизуются стандартными именами GTK 3 (`window`, `label`, `image`, `revealer`). Пример `~/.config/barricade/style.css`:
 
 ```css
+window {
+    background: transparent;
+}
 .barricade_background {
-    background: #1e1e2e;
-    color: #cdd6f4;
+    background-color: skyblue;
+    border-radius: 10px;
+}
+
+.barricade_statusbar_button {
+    color: black;
+    background: transparent;
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    transition: background-color 150ms ease;
+    padding: 6px 6px;
+    min-height: 0;
+    min-width: 0;
+    margin: 4px 6px;
+}
+
+.barricade_statusbar_button:hover {
+    background-color: #6fbdee;
+}
+
+.barricade_statusbar_button:active {
+    background-color: #5aaedf;
 }
 ```
 
 ## Структура проекта
 
 ```
-src/
-├── main.rs              # Точка входа, layer-shell окна, горячая перезагрузка CSS
-├── ui.rs                # Раскладка бара (слева / центр / справа), периодическое обновление виджетов
-├── lib/
-│   ├── mod.rs           # Модули библиотеки
-│   ├── audio.rs         # Громкость / mute / устройства через wpctl
-│   ├── battery.rs       # Состояние батареи из /sys/class/power_supply
-│   ├── layout.rs        # Раскладка клавиатуры через niri IPC
-│   ├── network.rs       # Сетевые устройства через NetworkManager (nmrs)
-│   ├── bluetooth.rs     # Зарезервирован, пока не реализован
-│   └── core/
-│       ├── parcer.rs    # Парсер конфигурационного файла
-│       ├── placer.rs    # Сборка виджетов и размещение по зонам
-│       ├── widget.rs    # Общий трейт виджетов
-│       └── element.rs   # Обёртка собранного виджета
-└── widgets/
-    ├── mod.rs           # Модули виджетов
-    ├── clock.rs         # Дата и время
-    ├── audio.rs         # Индикатор громкости
-    ├── layout.rs        # Индикатор раскладки клавиатуры
-    ├── network.rs       # Индикатор сети
-    └── battery.rs       # Индикатор батареи
+.
+├── Cargo.toml
+├── Cargo.lock
+├── LICENSE
+├── NOTICE
+├── package.nix          # Описание Nix-пакета
+├── shell.nix            # Окружение разработки Nix
+├── README.md
+├── README_EN.md
+├── README_RU.md
+└── src/
+    ├── main.rs              # Точка входа, layer-shell окна, горячая перезагрузка CSS
+    ├── ui.rs                # Раскладка бара (слева / центр / справа), периодическое обновление виджетов
+    ├── lib/
+    │   ├── mod.rs           # Модули библиотеки
+    │   ├── audio.rs         # Громкость / mute / устройства через wpctl
+    │   ├── battery.rs       # Состояние батареи из /sys/class/power_supply
+    │   ├── layout.rs        # Раскладка клавиатуры через niri IPC
+    │   ├── network.rs       # Сетевые устройства через NetworkManager (nmrs)
+    │   ├── bluetooth.rs     # Зарезервирован, пока не реализован
+    │   └── core/
+    │       ├── mod.rs       # Модули ядра
+    │       ├── parcer.rs    # Парсер конфигурационного файла
+    │       ├── placer.rs    # Сборка виджетов и размещение по зонам
+    │       ├── widget.rs    # Общий трейт виджетов
+    │       └── element.rs   # Обёртка собранного виджета
+    └── widgets/
+        ├── mod.rs           # Модули виджетов
+        ├── clock.rs         # Дата и время
+        ├── audio.rs         # Индикатор громкости
+        ├── layout.rs        # Индикатор раскладки клавиатуры
+        ├── network.rs       # Индикатор сети
+        └── battery.rs       # Индикатор батареи
 ```
 
 ## Разработка
