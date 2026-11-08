@@ -14,11 +14,10 @@ pub struct Layout {
 }
 impl WidgetTrait for Layout {
     fn new(popup: Option<String>) -> Result<Self> {
-        let trigger = gtk::Button::new();
-        let trigger_style_context = trigger.style_context().add_class("barricade_statusbar_button");
+        let (container, trigger) = Self::make_trigger();
 
         let text = gtk::Label::new(Some("??"));
-        trigger.set_child(Some(&text));
+        container.set_child(Some(&text));
         let layoutlib = LayoutLib::new()?;
         let mut layout = Self {
             layoutlib: layoutlib,

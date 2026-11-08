@@ -12,10 +12,9 @@ pub struct Clock {
 
 impl WidgetTrait for Clock {
     fn new(popup: Option<String>) -> Result<Self> {
-        let trigger = gtk::Button::new();
-        let trigger_style_context = trigger.style_context().add_class("barricade_statusbar_button");
+        let (container, trigger) = Self::make_trigger();
         let text = gtk::Label::new(Some("00:00:00"));
-        trigger.set_child(Some(&text));
+        container.set_child(Some(&text));
 
         let mut clock = Self {
             trigger,

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::time::SystemTime;
 use anyhow::{Result, Ok};
 
 use gtk::prelude::*;
@@ -15,68 +15,82 @@ use crate::widgets::{
     layout::Layout,
 };
 
-use super::parcer::{ElementType, Parser};
+use super::parcer::{modified_time, ElementType, Parser};
 pub use super::parcer::ElementPos;
 
 pub struct Placer {
     pub widgets: HashMap<ElementPos, Vec<BuiltWidget>>,
+    // gtk-объекты — это счётные ссылки, поэтому клонировать контейнеры дёшево
+    containers: Vec<(ElementPos, gtk::Box)>,
+    parser: Parser,
+    // Время изменения конфига на момент последней сборки виджетов
+    config_mtime: Option<SystemTime>,
 }
 
 impl Placer {
     pub fn new(containers: &[(ElementPos, &gtk::Box)]) -> Result<Self> {
         let mut placer = Self {
             widgets: HashMap::new(),
+            containers: containers
+                .iter()
+                .map(|(pos, c)| (*pos, (**c).clone()))
+                .collect(),
+            parser: Parser::new(),
+            config_mtime: None,
         };
 
-        let config = Parser::new().parse()?;
+        placer.rebuild()?;
+        Ok(placer)
+    }
+
+    // Читает конфиг, собирает виджеты и раскладывает их по контейнерам.
+    // Старые виджеты заменяются только после успешной сборки новых,
+    // поэтому при ошибке в конфиге бар остаётся прежним.
+    fn rebuild(&mut self) -> Result<()> {
+        // mtime читаем до парсинга, чтобы неудачная попытка не повторялась каждый тик
+        self.config_mtime = modified_time(self.parser.config_path());
+        let config = self.parser.parse()?;
 
         // 1. Собираем виджеты из распарсенного конфига
+        let mut widgets = HashMap::new();
         for (pos, specs) in config.elements {
             let mut built_list = Vec::new();
             for spec in specs {
                 built_list.push(Self::widget_assembler(&spec.kind, spec.command)?);
             }
-            placer.widgets.insert(pos, built_list);
+            widgets.insert(pos, built_list);
         }
 
-        // 2. Раскладываем по контейнерам
-        for (pos, container) in containers {
-            if let Some(widgets) = placer.widgets.get(pos) {
-                for widget in widgets {
-                    container.add(&widget.gtk_widget());
-                }
+        // 2. Очищаем контейнеры от старых виджетов
+        for (_, container) in &self.containers {
+            for child in container.children() {
+                container.remove(&child);
             }
         }
 
-        // 3. Подключаем стили, если указаны
-        if let Some(path) = config.stylesheet {
-            Self::apply_stylesheet(&path);
+        // 3. Раскладываем новые по контейнерам
+        for (pos, container) in &self.containers {
+            if let Some(list) = widgets.get(pos) {
+                for widget in list {
+                    container.add(&widget.gtk_widget());
+                }
+            }
+            // окно уже могло быть показано, новые виджеты сами не появятся
+            container.show_all();
         }
 
-        let _ = placer.update_widgets();
-        Ok(placer)
+        self.widgets = widgets;
+        let _ = self.update_widgets();
+        Ok(())
     }
 
-    // Ошибка в стилях не должна ронять бар, поэтому только предупреждаем
-    fn apply_stylesheet(path: &Path) {
-        if !path.is_file() {
-            eprintln!("stylesheet not found: {}", path.display());
+    // Пересобирает бар, если файл конфига изменился
+    pub fn reload_if_changed(&mut self) {
+        if modified_time(self.parser.config_path()) == self.config_mtime {
             return;
         }
-
-        let Some(screen) = gtk::gdk::Screen::default() else {
-            eprintln!("stylesheet skipped: no default screen");
-            return;
-        };
-
-        let provider = gtk::CssProvider::new();
-        match provider.load_from_path(&path.to_string_lossy()) {
-            std::result::Result::Ok(()) => gtk::StyleContext::add_provider_for_screen(
-                &screen,
-                &provider,
-                gtk::STYLE_PROVIDER_PRIORITY_USER,
-            ),
-            Err(e) => eprintln!("failed to load stylesheet {}: {e}", path.display()),
+        if let Err(e) = self.rebuild() {
+            eprintln!("config reload failed: {e:#}");
         }
     }
 

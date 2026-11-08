@@ -17,7 +17,7 @@ pub struct Battery {
 impl WidgetTrait for Battery {
     fn new(popup: Option<String>) -> Result<Self> {
         let battery_lib = BatteryLib::new();
-        let internal_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        let (container, trigger) = Self::make_trigger();
 
         let indicator = gtk::Image::builder()
             .icon_name("battery-full-symbolic")
@@ -32,14 +32,10 @@ impl WidgetTrait for Battery {
 
         revealer.add(&text);
 
-        // Собираем всё в internal_container
-        internal_container.pack_start(&indicator, false, false, 0);
-        internal_container.pack_start(&revealer, false, false, 0);
+        // Собираем всё в container
+        container.pack_start(&indicator, false, false, 0);
+        container.pack_start(&revealer, false, false, 0);
 
-        // Основной контейнер модуля
-        let trigger = gtk::Button::new();
-        let trigger_style_context = trigger.style_context().add_class("barricade_statusbar_button");
-        trigger.add(&internal_container);
 
         // Сигналы
         trigger.connect_enter_notify_event(
