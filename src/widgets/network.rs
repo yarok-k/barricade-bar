@@ -88,6 +88,7 @@ impl WidgetTrait for Network {
         internal_container.pack_start(&indicator, false, false, 0);
 
         let trigger = gtk::Button::new();
+        let trigger_style_context = trigger.style_context().add_class("barricade_statusbar_button");
         trigger.add(&internal_container);
 
         Ok(Self {

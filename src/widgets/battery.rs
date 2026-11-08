@@ -38,6 +38,7 @@ impl WidgetTrait for Battery {
 
         // Основной контейнер модуля
         let trigger = gtk::Button::new();
+        let trigger_style_context = trigger.style_context().add_class("barricade_statusbar_button");
         trigger.add(&internal_container);
 
         // Сигналы

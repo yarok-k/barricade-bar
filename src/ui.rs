@@ -14,6 +14,8 @@ impl Ui {
         let main_container = gtk::Grid::new();
         main_container.set_column_homogeneous(true);
         main_container.set_hexpand(true);
+        let main_container_style_context = main_container.style_context();
+        main_container_style_context.add_class("barricade_background");
         window.add(&main_container);
         // генерируем контейнеры для расположения в них виджетов, далее обращаемся только к ним
         let left_container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
