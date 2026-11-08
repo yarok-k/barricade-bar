@@ -1,0 +1,41 @@
+Barricade Bar
+Copyright (C) 2026 yarok-k
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. See the LICENSE file for the full text.
+
+----------------------------------------------------------------------------
+Third-party software
+----------------------------------------------------------------------------
+
+Barricade Bar is built with the Rust crates listed below (direct dependencies).
+They are not bundled in this repository; they are fetched by Cargo at build
+time. Each crate remains under its own license and copyright, and its license
+text is distributed with the crate sources. Licenses as published on crates.io:
+
+  niri-ipc          GPL-3.0-or-later   (the reason this project is GPL-3.0-or-later)
+  gtk, gio          MIT                (gtk-rs)
+  gtk-layer-shell   MIT
+  nmrs              MIT
+  tokio             MIT
+  stray             MIT
+  ksni              Unlicense
+  dbus              MIT OR Apache-2.0
+  anyhow            MIT OR Apache-2.0
+  chrono            MIT OR Apache-2.0
+  pollster          MIT OR Apache-2.0
+  serde             MIT OR Apache-2.0
+  serde_yaml        MIT OR Apache-2.0
+
+Transitive dependencies are licensed under MIT, Apache-2.0, BSD-2-Clause,
+BSD-3-Clause, Unlicense or compatible terms (some with the LLVM exception).
+All of them are compatible with the GPL-3.0-or-later.
+
+Runtime libraries (GTK 3, gtk-layer-shell, GLib) are linked dynamically from the
+system and are licensed under the LGPL-2.1-or-later / MIT; they are not part of
+this distribution.
+
+Third-party tools used at runtime (wpctl from WirePlumber, NetworkManager,
+niri) are separate programs and are not distributed with this project.
