@@ -49,7 +49,7 @@ rustPlatform.buildRustPackage {
     description = "Статусбар для niri на GTK3";
     homepage = "https://github.com/yarok-k/barricade-bar";
     license = lib.licenses.gpl3Plus;
-    mainProgram = "barricade_bar";
+    mainProgram = "barricade-bar";
     platforms = lib.platforms.linux;
   };
 }
