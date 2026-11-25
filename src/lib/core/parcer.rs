@@ -37,7 +37,6 @@ pub enum ElementType {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum ElementEntry {
-    Plain(ElementType),
     WithCommand(HashMap<ElementType, Option<String>>),
 }
 
@@ -45,10 +44,6 @@ impl ElementEntry {
     // Приводим оба варианта к списку пар (тип, команда)
     fn into_specs(self) -> Vec<ElementSpec> {
         match self {
-            ElementEntry::Plain(t) => vec![ElementSpec {
-                kind: t,
-                command: None,
-            }],
             ElementEntry::WithCommand(map) => map
                 .into_iter()
                 .map(|(kind, cmd)| ElementSpec {
