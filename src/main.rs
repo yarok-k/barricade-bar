@@ -127,6 +127,7 @@ fn create_window_for_monitor(app: &Application, monitor: &gdk::Monitor) {
     gtk_layer_shell::set_anchor(&win, gtk_layer_shell::Edge::Top, true);
     gtk_layer_shell::set_anchor(&win, gtk_layer_shell::Edge::Left, true);
     gtk_layer_shell::set_anchor(&win, gtk_layer_shell::Edge::Right, true);
+    gtk_layer_shell::set_margin(&win, gtk_layer_shell::Edge::Bottom, 10);
     gtk_layer_shell::set_exclusive_zone(&win, 35);
     let _ui = Ui::new(&win, app);
 
