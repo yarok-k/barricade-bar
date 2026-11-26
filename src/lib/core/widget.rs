@@ -12,4 +12,15 @@ pub trait WidgetTrait: Sized {
         trigger.add(&container);
         (container, trigger)
     }
+    fn attach_click_command(trigger: &gtk::Button, command: Option<String>) {
+        let Some(cmd) = command else { return };
+        trigger.connect_clicked(move |_| {
+            let mut parts = cmd.split_whitespace();
+            let Some(program) = parts.next() else { return };
+
+            if let Err(e) = std::process::Command::new(program).args(parts).spawn() {
+                eprintln!("Не удалось запустить {}: {}", cmd, e);
+            }
+        });
+    }
 }

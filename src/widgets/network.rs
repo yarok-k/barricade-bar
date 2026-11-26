@@ -79,16 +79,14 @@ impl Network {
 }
 
 impl WidgetTrait for Network {
-    fn new(_popup: Option<String>) -> Result<Self> {
+    fn new(popup: Option<String>) -> Result<Self> {
         Self::start_poller();
         let (container, trigger) = Self::make_trigger();
         let indicator = gtk::Image::builder().icon_name(OFFLINE_ICON).build();
         container.pack_start(&indicator, false, false, 0);
-
-
-
+        Self::attach_click_command(&trigger, popup);
         Ok(Self {
-            trigger,
+            trigger: trigger.clone(),
             indicator,
             shown_icon: OFFLINE_ICON.to_string(),
         })

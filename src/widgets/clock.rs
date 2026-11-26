@@ -15,13 +15,14 @@ impl WidgetTrait for Clock {
         let (container, trigger) = Self::make_trigger();
         let text = gtk::Label::new(Some("00:00:00"));
         container.set_child(Some(&text));
-
+        Self::attach_click_command(&trigger, popup);
         let mut clock = Self {
             trigger,
             text,
             time: RefCell::new(String::new()),
         };
         clock.update()?;
+
         Ok(clock)
     }
 

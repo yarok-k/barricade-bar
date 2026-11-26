@@ -51,6 +51,7 @@ impl WidgetTrait for Battery {
                 glib::Propagation::Proceed
             }),
         );
+        Self::attach_click_command(&trigger, popup);
         Ok(Self {
             trigger,
             indicator,

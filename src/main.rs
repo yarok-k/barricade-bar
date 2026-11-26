@@ -5,8 +5,9 @@ use std::time::{Duration, SystemTime};
 
 use gtk::prelude::*;
 use gtk::{CssProvider, StyleContext, Application, ApplicationWindow, glib, gdk};
+
 use ui::Ui;
-use lib::core::parcer::{modified_time, Parser};
+use lib::core::{parcer::{modified_time, Parser},flags::parse_flags};
 
 mod lib;
 mod ui;
@@ -81,9 +82,13 @@ impl StyleWatcher {
 }
 
 fn main() -> Result<(), anyhow::Error> {
+    let args = parse_flags();
+
     let app = Application::builder()
         .application_id("ru.bst.Barricade.bar")
         .build();
+
+    let rebuild_flag = Rc::new(RefCell::new(args.update));
 
     app.connect_startup(|_| {
         let watcher = Rc::new(RefCell::new(StyleWatcher::new()));
@@ -93,22 +98,34 @@ fn main() -> Result<(), anyhow::Error> {
         });
     });
 
+    let flag_for_activate = Rc::clone(&rebuild_flag);
     app.connect_activate(move |app| {
-        // Получаем дисплей по умолчанию
-        let display = gtk::gdk::Display::default().expect("Could not get default display");
+        rebuild_windows(app);
 
-        // Итерируемся по всем подключенным мониторам
-        let monitor_count = display.n_monitors();
-        for i in 0..monitor_count {
-            if let Some(monitor) = display.monitor(i) {
-                create_window_for_monitor(app, &monitor);
+        // Подписываемся на добавление мониторов только один раз при первичном старте
+        let once_guard = Rc::new(RefCell::new(false));
+        if !*once_guard.borrow() {
+            *once_guard.borrow_mut() = true;
+            if let Some(display) = gtk::gdk::Display::default() {
+                let app_clone = app.clone();
+                display.connect_monitor_added(move |_, monitor| {
+                    create_window_for_monitor(&app_clone, monitor);
+                });
             }
         }
-        let app_clone = app.clone();
-        display.connect_monitor_added(move |_, monitor| {
-            create_window_for_monitor(&app_clone, monitor);
-        });
+
+        *flag_for_activate.borrow_mut() = false;
     });
+
+    // Если запущен с -u/--update и уже есть активный процесс с этим application_id:
+    // регистрируем приложение и активируем его, чтобы сработал connect_activate в основном процессе.
+    if args.update {
+        app.register(None::<&gio::Cancellable>)?;
+        if app.is_remote() {
+            app.activate();
+            return Ok(());
+        }
+    }
 
     let exit_code = app.run();
     if exit_code.value() != 0 {}
@@ -132,4 +149,24 @@ fn create_window_for_monitor(app: &Application, monitor: &gdk::Monitor) {
     let _ui = Ui::new(&win, app);
 
     win.show_all();
+}
+
+
+fn rebuild_windows(app: &Application) {
+    // Закрываем существующие окна бара перед пересборкой
+    for win in app.windows() {
+        win.close();
+    }
+
+    let Some(display) = gtk::gdk::Display::default() else {
+        eprintln!("Could not get default display");
+        return;
+    };
+
+    let monitor_count = display.n_monitors();
+    for i in 0..monitor_count {
+        if let Some(monitor) = display.monitor(i) {
+            create_window_for_monitor(app, &monitor);
+        }
+    }
 }

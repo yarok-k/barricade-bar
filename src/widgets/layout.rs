@@ -19,9 +19,10 @@ impl WidgetTrait for Layout {
         let text = gtk::Label::new(Some("??"));
         container.set_child(Some(&text));
         let layoutlib = LayoutLib::new()?;
+        Self::attach_click_command(&trigger, popup);
         let mut layout = Self {
             layoutlib: layoutlib,
-            trigger,
+            trigger: trigger.clone(),
             text,
             layout: RefCell::new("??".to_string()),
             layouts: RefCell::new(Vec::new()),

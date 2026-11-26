@@ -49,16 +49,7 @@ impl WidgetTrait for Audio {
                 glib::Propagation::Proceed
             }),
         );
-        if let Some(cmd) = popup {
-            trigger.connect_clicked(move |_| {
-                let mut parts = cmd.split_whitespace();
-                let Some(program) = parts.next() else { return };
-
-                if let Err(e) = std::process::Command::new(program).args(parts).spawn() {
-                    eprintln!("Не удалось запустить {}: {}", cmd, e);
-                }
-            });
-        }
+        Self::attach_click_command(&trigger, popup);
         Ok(Self {
             trigger,
             indicator,
